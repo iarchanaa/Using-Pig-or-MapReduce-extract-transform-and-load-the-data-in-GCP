@@ -4,9 +4,13 @@
 # Acquire the top 200,000 posts by viewcount by quering it in stack exchange https://data.stackexchange.com/stackoverflow/query/new
 
 Stackexchange> select * from posts where posts.ViewCount>57850 and posts.ViewCount <= 100000 order by posts.ViewCount desc
+
 Stackexchange> select * from posts where posts.ViewCount>58030 and posts.ViewCount <=57850  order by posts.ViewCount desc
+
 Stackexchange> select * from posts where posts.ViewCount> 42000 and posts.ViewCount <= 58030 order by posts.ViewCount desc
+
 Stackexchange> select * from posts where posts.ViewCount> 33000 and posts.ViewCount <= 42000 order by posts.ViewCount desc
+
 Stackexchange> select * from posts where posts.ViewCount> 31500  and posts.ViewCount <= 33000 order by posts.ViewCount desc
 
 # STEP2: TRANSFORM DATA BY USING PIG
