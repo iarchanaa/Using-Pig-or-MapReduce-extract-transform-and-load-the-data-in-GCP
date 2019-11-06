@@ -72,3 +72,10 @@ select a,c from group_owneruserid_body order by c desc limit 10;
 select COUNT (DISTINCT OwnerUserId) from stack where lower (Body) like ‘%hadoop%’;
 
 # Using Mapreduce calculate the per-user TF-IDF 
+SELECT *
+FROM (
+SELECT ROW_NUMBER()
+OVER(PARTITION BY Id
+ORDER BY tfidf DESC) AS TfidfRank, *
+FROM TfIDF) n
+WHERE TfidfRank IN (1,2,3,4,5,6,7,8,9,10);
