@@ -77,7 +77,7 @@ select COUNT (DISTINCT OwnerUserId) from stack where lower (Body) like ‘%hadoo
 
 # Using Mapreduce calculate the per-user TF-IDF 
 
-To run MapReduce program to calculate TFIDF, only I added stop words in MapperPhaseOne.Py.
+To run MapReduce program to calculate TFIDF, I added stop words in MapperPhaseOne.Py.
 stopwords= ['a','able','about','across','after','all','almost','also','am','among','an','and','any','are','as','at','be','because','been','but','by',
             'can','cannot','could','dear','did','do','does','either','else','ever','every','for','from','get','got','had','has','have','he','her','hers',
             'him','his','how','however','i','if','in','into','is','it','its','just','least','let','like','likely','may','me','might','most','must','my',
@@ -85,6 +85,42 @@ stopwords= ['a','able','about','across','after','all','almost','also','am','amon
             'some','than','that','the','their','them','then','there','these','they','this','tis','to','too','twas','us','wants','was','we','were','what',
             'when','where','which','while','who','whom','why','will','with','would','yet','you','your'];
 
+# Upload all phases of mapper and reducer to GCP 
+
+chmod +x mapper* reducer*
+
+cd tfidfdata
+
+00000_0
+# Replace all comma with space using SED command
+sed 's/,/ /g' 000000_0  >result
+# Make new directory with -mkdir command and upload result to hadoop
+
+hadoop fs -mkdir /tfidf_result
+
+hadoop fs -put result /tfidf_result
+
+hadoop fs -ls /
+
+# Run mapper and reducer for all 3 phases using Hadoop jar command in GCP
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar -file /home/archana_kalapgar2/MapperPhaseOne.py /home/archana_kalapgar2/ReducerPhaseOne.py -mapper "python MapperPhaseOne.py" -reducer "python ReducerPhaseOne.py" -input hdfs://cluster-29-mm-m/tfidf_result/result -output hdfs://cluster-29-mm-m/output
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar -file /home/archana_kalapgar2/MapperPhaseTwo.py /home/archana_kalapgar2/ReducerPhaseTwo.py -mapper "python MapperPhaseTwo.py" -reducer "python ReducerPhaseTwo.py" -input hdfs://cluster-29-mm-m/output/part-00000 hdfs://cluster-29-mm-m/output/part-00001 hdfs://cluster-29-mm-m/output/part-00002 hdfs://cluster-29-mm-m/output/part-00003 hdfs://cluster-29-mm-m/output/part-00004	 -output hdfs://cluster-29-mm-m/output1
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar -file /home/archana_kalapgar2/MapperPhaseThree.py /home/archana_kalapgar2/ReducerPhaseThree.py -mapper "python MapperPhaseThree.py" -reducer "python ReducerPhaseThree.py" -input hdfs://cluster-29-mm-m/outputt/part-00000 hdfs://cluster-29-mm-m/outputt/part-00001 hdfs://cluster-29-mm-m/outputt/part-00002 hdfs://cluster-29-mm-m/outputt/part-00003 hdfs://cluster-29-mm-m/outputt/part-00004  -output hdfs://cluster-29-mm-m/outputtt
+
+# Get obtained result and merge with -getmerge command
+
+hadoop fs -getmerge hdfs://cluster-29-mm-m/outputtt/part-00000 hdfs://cluster-29-mm-m/outputtt/part-00001 hdfs://cluster-29-mm-m/outputtt/part-00002 hdfs://cluster-29-mm-m/outputtt/part-00003 hdfs://cluster-29-mm-m/outputtt/part-00004 /home/archana_kalapgar2/tfidff
+
+# Make csv file of output using SED command
+sed -e 's/\s/,/g' tfidff  > output.csv
+
+# Create a table in hive and load output.csv to get result
+Hive>create external table if not exists TFIDF (Term String,Id int,tfidf float)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+load data local inpath 'output.csv' overwrite into table TFIDF;
 
 
 SELECT *
